@@ -1,32 +1,58 @@
-use std::error::Error as StdError;
+use mongodb::bson;
+use serde::Serialize;
+use std::convert::Infallible;
+use thiserror::Error;
+use warp::{http::StatusCode, reply, Rejection, Reply};
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum Error {
-    TableNotReady(String),
-    Unhandled(Box<dyn StdError + Send + Sync + 'static>),
+    #[error("mongodb error: {0}")]
+    MongoError(#[from] mongodb::error::Error),
+    #[error("error during mongodb query: {0}")]
+    MongoQueryError(mongodb::error::Error),
+    #[error("could not access field in document: {0}")]
+    MongoDataError(#[from] bson::document::ValueAccessError),
+    #[error("invalid id used: {0}")]
+    InvalidIDError(String),
 }
 
-impl Error {
-    pub fn table_not_ready(table_name: impl Into<String>) -> Self {
-        Self::TableNotReady(table_name.into())
-    }
-
-    pub fn unhandled(source: impl Into<Box<dyn StdError + Send + Sync + 'static>>) -> Self {
-        Self::Unhandled(source.into())
-    }
+#[derive(Serialize)]
+struct ErrorResponse {
+    message: String,
 }
 
-impl From<aws_sdk_dynamodb::Error> for Error {
-    fn from(source: aws_sdk_dynamodb::Error) -> Self {
-        Error::unhandled(source)
-    }
-}
+impl warp::reject::Reject for Error {}
 
-impl<T> From<aws_sdk_dynamodb::types::SdkError<T>> for Error
-where
-    T: StdError + Send + Sync + 'static,
-{
-    fn from(source: aws_sdk_dynamodb::types::SdkError<T>) -> Self {
-        Error::unhandled(source)
+pub async fn handle_rejection(err: Rejection) -> std::result::Result<Box<dyn Reply>, Infallible> {
+    let code;
+    let message;
+
+    if err.is_not_found() {
+        code = StatusCode::NOT_FOUND;
+        message = "Not Found";
+    } else if let Some(_) = err.find::<warp::filters::body::BodyDeserializeError>() {
+        code = StatusCode::BAD_REQUEST;
+        message = "Invalid Body";
+    } else if let Some(e) = err.find::<Error>() {
+        match e {
+            _ => {
+                eprintln!("unhandled application error: {:?}", err);
+                code = StatusCode::INTERNAL_SERVER_ERROR;
+                message = "Internal Server Error";
+            }
+        }
+    } else if let Some(_) = err.find::<warp::reject::MethodNotAllowed>() {
+        code = StatusCode::METHOD_NOT_ALLOWED;
+        message = "Method Not Allowed";
+    } else {
+        eprintln!("unhandled error: {:?}", err);
+        code = StatusCode::INTERNAL_SERVER_ERROR;
+        message = "Internal Server Error";
     }
+
+    let json = reply::json(&ErrorResponse {
+        message: message.into(),
+    });
+
+    Ok(Box::new(reply::with_status(json, code)))
 }
