@@ -17,4 +17,4 @@ futures = { version = "0.3.4", default-features = false, features = ["async-awai
 mongodb = "2.3.0"
 chrono = { version = "0.4", features = ["serde"] }
 pretty_env_logger = "0.4"
-tokio = { version =  "1.8", features = ["full", "rt-multi-thread", "macros"] }
+tokio = { version =  "1.23", features = ["full", "rt-multi-thread", "macros"] }
