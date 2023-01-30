@@ -1,3 +1,4 @@
+use self::{error::Error, error::Error::MongoQueryError, types::User};
 use log::info;
 use mongodb::{
     bson::{doc, Document},
@@ -5,13 +6,11 @@ use mongodb::{
     Client, Collection,
 };
 
-use self::{error::Error, error::Error::MongoQueryError, types::User};
-
 pub mod error;
 pub mod types;
 
 const DB_NAME: &str = "rssling_bot";
-const COLL: &str = "users";
+const USERS: &str = "users";
 
 const ID: &str = "_id";
 const FIRST_NAME: &str = "first_name";
@@ -37,10 +36,10 @@ impl DB {
         Ok(Self { client })
     }
 
-    fn get_collection(&self) -> Collection<Document> {
+    fn users(&self) -> Collection<Document> {
         let db = self.client.database(DB_NAME);
 
-        db.collection::<Document>(COLL)
+        db.collection::<Document>(USERS)
     }
 
     pub async fn create_user_if_not_exist(&self, user: &User) -> Result<(), Error> {
@@ -55,7 +54,7 @@ impl DB {
         };
 
         let created_user = self
-            .get_collection()
+            .users()
             .insert_one(doc, None)
             .await
             .map_err(MongoQueryError)?;
@@ -67,7 +66,7 @@ impl DB {
 
     pub async fn find_user(&self, user: &User) -> Result<Option<Document>, Error> {
         let user = self
-            .get_collection()
+            .users()
             .find_one(
                 doc! {
                     "telegram_id": &user.telegram_id

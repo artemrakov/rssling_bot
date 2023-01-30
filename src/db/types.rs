@@ -16,6 +16,7 @@ pub struct Channel {
     pub name: String,
     pub url: Url,
     pub updated: DateTime<Utc>,
+    pub urls: Vec<RssEntry>,
 }
 
 #[derive(Debug)]
@@ -36,10 +37,10 @@ pub struct Subscriptions {
 }
 
 #[derive(Debug)]
-pub struct RssUrl {
+pub struct RssEntry {
     pub id: String,
-    pub url: Url,
-    pub channel_id: i64,
+    pub title: String,
+    pub link: Url,
 }
 
 #[derive(Debug)]
