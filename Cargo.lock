@@ -127,6 +127,7 @@ checksum = "8746d07211bb12a7c34d995539b4a2acd4e0b0e757de98ce2ab99bcf17443fad"
 dependencies = [
  "ahash",
  "base64",
+ "chrono",
  "hex",
  "indexmap",
  "lazy_static",
@@ -134,6 +135,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
+ "serde_with",
  "time 0.3.17",
  "uuid 1.2.2",
 ]
@@ -1570,6 +1572,7 @@ dependencies = [
  "reqwest",
  "rss",
  "serde",
+ "serde_with",
  "simple_logger",
  "syndication",
  "teloxide",

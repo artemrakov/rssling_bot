@@ -68,7 +68,8 @@ async fn start(msg: &Message) -> HandlerResult {
     let telegram_user = msg.from().unwrap();
 
     let user = User {
-        id: Some(telegram_user.id.0.to_string()),
+        id: None,
+        telegram_id: telegram_user.id.0.to_string(),
         first_name: telegram_user.first_name.clone(),
         username: telegram_user.username.as_ref().unwrap().clone(),
     };
