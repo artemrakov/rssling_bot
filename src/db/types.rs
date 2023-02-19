@@ -1,10 +1,11 @@
 use chrono::DateTime;
 use chrono::Utc;
-use url::Url;
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     pub first_name: String,
     pub username: String,
@@ -12,6 +13,7 @@ pub struct User {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Channel {
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     pub title: String,
     pub url: String,
@@ -28,7 +30,6 @@ pub enum SubscriptionStatus {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Subscription {
-    pub id: String,
     pub user_id: String,
     pub status: SubscriptionStatus,
     pub created_at: DateTime<Utc>,
@@ -37,7 +38,6 @@ pub struct Subscription {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RssEntry {
-    pub id: Option<String>,
     pub title: String,
     pub pub_date: DateTime<Utc>,
     pub url: String,
@@ -48,5 +48,6 @@ pub struct RssEntry {
 pub struct Read {
     pub id: String,
     pub user_id: String,
+    pub channel_id: String,
     pub seen: bool,
 }

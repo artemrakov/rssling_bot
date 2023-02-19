@@ -81,7 +81,7 @@ async fn start(msg: &Message) -> HandlerResult {
 async fn subscribe_to_rss(msg: &Message, link: &str) -> HandlerResult {
     let url = Url::parse(link)?;
 
-    let channel = rss::fetch_channel(url).await?;
+    let channel = rss::fetch_channel(url.to_string()).await?;
     let db_client = DB::init().await.unwrap();
 
     db_client.create_or_update_channel(&channel).await?;

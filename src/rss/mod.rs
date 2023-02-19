@@ -1,41 +1,53 @@
 use super::db::types::{Channel, RssEntry};
+use atom_syndication::Link;
+use chrono::{DateTime, Utc};
 use log::info;
-use reqwest::Url;
 use std::error::Error;
 
-const NUMBER_OF_ITEMS: usize = 10;
-
-pub async fn fetch_channel(url: Url) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let content = reqwest::get(url).await?.text().await?;
+pub async fn fetch_channel(url: String) -> Result<Channel, Box<dyn Error + Send + Sync>> {
+    let content = reqwest::get(&url).await?.text().await?;
 
     let channel = match content.parse::<syndication::Feed>() {
-        Ok(syndication::Feed::RSS(rss)) => parse_rss(rss),
-        Ok(syndication::Feed::Atom(atom)) => parse_atom(atom),
-        _ => Err("Could not parse feed"),
+        Ok(syndication::Feed::RSS(rss)) => parse_rss(url, rss),
+        Ok(syndication::Feed::Atom(atom)) => parse_atom(url, atom),
+        _ => Err("Could not parse feed")?,
     };
 
-    Ok(())
+    info!("Channel: #{:?}", channel);
+    channel
 }
 
-fn parse_atom(atom: atom_syndication::Feed) -> Result<Channel, &'static str> {
+fn parse_atom(
+    url: String,
+    atom: atom_syndication::Feed,
+) -> Result<Channel, Box<dyn Error + Send + Sync>> {
+    info!("Parsing atom: {}", url);
+
     let entries: Vec<RssEntry> = atom
         .entries()
         .iter()
-        .take(NUMBER_OF_ITEMS)
-        .map(|entry| RssEntry {
-            id: None,
-            title: entry.title.value,
-            pub_date: entry.updated.into(),
-            url: entry.id,
-            created_at: chrono::offset::Utc::now(),
+        .map(|entry| {
+            let link = entry
+                .links()
+                .get(0)
+                .unwrap_or(&Link::default())
+                .href()
+                .to_string();
+
+            RssEntry {
+                title: entry.title.value.clone(),
+                pub_date: entry.updated.into(),
+                url: link,
+                created_at: Utc::now(),
+            }
         })
         .collect();
 
     let channel = Channel {
         id: None,
         title: atom.title.value,
-        url: atom.id,
-        updated_at: chrono::offset::Utc::now(),
+        url,
+        updated_at: Utc::now(),
         entries,
         subs: vec![],
     };
@@ -43,31 +55,36 @@ fn parse_atom(atom: atom_syndication::Feed) -> Result<Channel, &'static str> {
     Ok(channel)
 }
 
-fn parse_rss(rss: rss::Channel) -> Result<Channel, &'static str> {
-    // let channel = channel.unwrap();
-    // info!("Channel: #{:?}", &rss_channel);
+fn parse_rss(
+    url: String,
+    rss_channel: rss::Channel,
+) -> Result<Channel, Box<dyn Error + Send + Sync>> {
+    info!("Parsing rss: {}", url);
 
-    // let entries: Vec<RssEntry> = rss_channel
-    //     .items()
-    //     .iter()
-    //     .take(NUMBER_OF_ITEMS)
-    //     .map(|item| RssEntry {
-    //         id: None,
-    //         title: item.title.clone(),
-    //         description: item.description.clone(),
-    //         pub_date: item.pub_date.clone(),
-    //         url: item.link.clone(),
-    //         created_at: chrono::offset::Utc::now(),
-    //     })
-    //     .collect();
-    //
-    // let channel = Channel {
-    //     id: None,
-    //     title: rss_channel.title.clone(),
-    //     url: rss_channel.link.clone(),
-    //     description: rss_channel.description.clone(),
-    //     updated_at: chrono::offset::Utc::now(),
-    //     entries,
-    //     subs: vec![],
-    // };
+    let entries: Vec<RssEntry> = rss_channel
+        .items()
+        .iter()
+        .map(|item| {
+            let pub_date = item.pub_date.clone().unwrap_or(Utc::now().to_rfc2822());
+            let parsed_date = DateTime::parse_from_rfc2822(&pub_date).unwrap();
+
+            RssEntry {
+                title: item.title.clone().unwrap_or("".to_string()),
+                pub_date: parsed_date.into(),
+                url: item.link.clone().unwrap_or("".to_string()),
+                created_at: Utc::now(),
+            }
+        })
+        .collect();
+
+    let channel = Channel {
+        id: None,
+        title: rss_channel.title,
+        url,
+        updated_at: Utc::now(),
+        entries,
+        subs: vec![],
+    };
+
+    Ok(channel)
 }
