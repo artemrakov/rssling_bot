@@ -46,6 +46,8 @@ async fn message_handler(bot: Bot, msg: Message, me: Me) -> HandlerResult {
         match BotCommands::parse(text, me.username()) {
             Ok(Command::Start) => start(&msg).await?,
             Ok(Command::Sub(link)) => {
+                info!("Link of sub: {}", &link);
+
                 subscribe_to_rss(&msg, &link).await?;
 
                 bot.send_message(msg.chat.id, format!("Success")).await?;
@@ -66,8 +68,7 @@ async fn start(msg: &Message) -> HandlerResult {
     let telegram_user = msg.from().unwrap();
 
     let user = User {
-        id: None,
-        telegram_id: telegram_user.id.0.to_string(),
+        id: Some(telegram_user.id.0.to_string()),
         first_name: telegram_user.first_name.clone(),
         username: telegram_user.username.as_ref().unwrap().clone(),
     };
@@ -80,7 +81,10 @@ async fn start(msg: &Message) -> HandlerResult {
 async fn subscribe_to_rss(msg: &Message, link: &str) -> HandlerResult {
     let url = Url::parse(link)?;
 
-    rss::fetch_channel(url).await?;
+    let channel = rss::fetch_channel(url).await?;
+    let db_client = DB::init().await.unwrap();
+
+    db_client.create_or_update_channel(&channel).await?;
 
     Ok(())
 }

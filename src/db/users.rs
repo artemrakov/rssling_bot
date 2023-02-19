@@ -2,15 +2,12 @@ use super::{error::Error, error::Error::MongoQueryError, types::User, DB};
 use crate::db::DB_NAME;
 use log::info;
 use mongodb::{
-    bson::{doc, Document},
+    bson::{doc, Document, to_document},
     Collection,
 };
 
 const USERS: &str = "users";
-
 const TELEGRAM_ID: &str = "_id";
-const FIRST_NAME: &str = "first_name";
-const USERNAME: &str = "username";
 
 impl DB {
     fn users(&self) -> Collection<Document> {
@@ -23,12 +20,7 @@ impl DB {
         if let Some(_) = self.find_user(&user).await? {
             return Ok(());
         }
-
-        let doc = doc! {
-            FIRST_NAME: &user.first_name,
-            USERNAME: &user.username,
-            TELEGRAM_ID: &user.telegram_id,
-        };
+        let doc = to_document(&user).unwrap();
 
         let created_user = self
             .users()
@@ -46,7 +38,7 @@ impl DB {
             .users()
             .find_one(
                 doc! {
-                    "telegram_id": &user.telegram_id
+                    TELEGRAM_ID: &user.id.as_ref().unwrap()
                 },
                 None,
             )

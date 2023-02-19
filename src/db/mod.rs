@@ -5,6 +5,7 @@ use mongodb::{bson::doc, options::ClientOptions, Client};
 pub mod error;
 pub mod types;
 pub mod users;
+pub mod channels;
 
 const DB_NAME: &str = "rssling_bot";
 
