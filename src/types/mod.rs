@@ -4,8 +4,8 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 pub mod channel;
-pub mod subscription;
 pub mod notification;
+pub mod subscription;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
@@ -58,6 +58,7 @@ pub struct Notification {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub id: Option<ObjectId>,
     pub telegram_id: String,
+    pub channel_name: String,
     pub channel_url: String,
     pub entries: Vec<RssEntry>,
     pub sent: bool,

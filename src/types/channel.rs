@@ -24,6 +24,7 @@ impl Channel {
         Notification {
             id: None,
             telegram_id: subscription.telegram_id.clone(),
+            channel_name: self.title.clone(),
             channel_url: self.url.clone(),
             entries,
             sent: false,
@@ -41,6 +42,7 @@ impl Channel {
                 id: None,
                 telegram_id: sub.telegram_id.clone(),
                 channel_url: self.url.clone(),
+                channel_name: self.title.clone(),
                 entries: entries.clone(),
                 sent: false,
             })

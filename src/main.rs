@@ -1,6 +1,7 @@
 use log::{info, LevelFilter};
-use rssling_bot::{db::DB, types::User};
+use mongodb::bson::doc;
 use rssling_bot::rss;
+use rssling_bot::{db::DB, types::User};
 use simple_logger::SimpleLogger;
 use std::error::Error;
 use teloxide::{prelude::*, types::Me, utils::command::BotCommands};
@@ -48,8 +49,8 @@ async fn message_handler(bot: Bot, msg: Message, me: Me) -> HandlerResult {
             Ok(Command::Sub(link)) => {
                 info!("Link of sub: {}", &link);
 
-                subscribe_to_rss(&msg, &link).await?;
-                bot.send_message(msg.chat.id, format!("Successfully subscribed")).await?;
+                let message = subscribe_to_rss(&msg, &link).await?;
+                bot.send_message(msg.chat.id, message).await?;
             }
 
             Err(_) => {
@@ -78,15 +79,30 @@ async fn start(msg: &Message) -> HandlerResult {
     Ok(())
 }
 
-async fn subscribe_to_rss(msg: &Message, link: &str) -> HandlerResult {
+async fn subscribe_to_rss(
+    msg: &Message,
+    link: &str,
+) -> Result<String, Box<dyn Error + Send + Sync>> {
     let telegram_id = msg.from().unwrap().id.0.to_string();
 
     let url = Url::parse(link)?;
     let channel = rss::fetch_channel(url.to_string()).await?;
     let db_client = DB::init().await.unwrap();
-
     db_client.create_or_update_channel(&channel).await?;
-    db_client.subscribe_to_channel(&channel, &telegram_id).await?;
 
-    Ok(())
+    let found_channel = db_client
+        .find_channel(doc! {
+            "url": link,
+            "subs.telegram_id": &telegram_id,
+        })
+        .await?;
+    if let Some(_) = found_channel {
+        return Ok("You have already subscribed to this feed".to_string());
+    }
+
+    db_client
+        .subscribe_to_channel(&channel, &telegram_id)
+        .await?;
+
+    Ok(format!("Successfully subscribed"))
 }

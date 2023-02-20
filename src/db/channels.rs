@@ -29,16 +29,8 @@ impl DB {
         db.collection::<Document>(CHANNELS)
     }
 
-    pub async fn find_channel(&self, channel: &Channel) -> Result<Option<Channel>, Error> {
-        let channel = self
-            .channels()
-            .find_one(
-                doc! {
-                    URL: &channel.url
-                },
-                None,
-            )
-            .await?;
+    pub async fn find_channel(&self, query: Document) -> Result<Option<Channel>, Error> {
+        let channel = self.channels().find_one(query, None).await?;
 
         if let None = channel {
             return Ok(None);
@@ -134,7 +126,7 @@ impl DB {
     }
 
     pub async fn create_or_update_channel(&self, channel: &Channel) -> Result<(), Error> {
-        if let Some(found_channel) = self.find_channel(&channel).await? {
+        if let Some(found_channel) = self.find_channel(doc! { URL: &channel.url }).await? {
             self.update_channel(&found_channel).await?;
             return Ok(());
         }
