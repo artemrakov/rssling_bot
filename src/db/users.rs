@@ -1,8 +1,8 @@
-use super::{error::Error, error::Error::MongoQueryError, types::User, DB};
-use crate::db::DB_NAME;
+use super::{error::Error, error::Error::MongoQueryError, DB};
+use crate::{db::DB_NAME, types::User};
 use log::info;
 use mongodb::{
-    bson::{doc, Document, to_document, from_document},
+    bson::{doc, from_document, to_document, Document},
     Collection,
 };
 

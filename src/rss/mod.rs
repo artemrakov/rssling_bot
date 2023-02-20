@@ -1,4 +1,4 @@
-use super::db::types::{Channel, RssEntry};
+use super::types::{Channel, RssEntry};
 use atom_syndication::Link;
 use chrono::{DateTime, Utc};
 use log::info;
@@ -22,7 +22,6 @@ fn parse_atom(
     atom: atom_syndication::Feed,
 ) -> Result<Channel, Box<dyn Error + Send + Sync>> {
     info!("Parsing atom: {}", url);
-
     let entries: Vec<RssEntry> = atom
         .entries()
         .iter()

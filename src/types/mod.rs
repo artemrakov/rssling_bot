@@ -3,7 +3,11 @@ use chrono::DateTime;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+pub mod channel;
+pub mod subscription;
+pub mod notification;
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub id: Option<ObjectId>,
@@ -20,11 +24,12 @@ pub struct Channel {
     pub url: String,
     #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]
     pub updated_at: DateTime<Utc>,
+    #[serde(skip_serializing, skip_deserializing)]
     pub entries: Vec<RssEntry>,
     pub subs: Vec<Subscription>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum SubscriptionStatus {
     Active,
     Cancelled,
@@ -32,14 +37,13 @@ pub enum SubscriptionStatus {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Subscription {
-    pub user_id: String,
+    pub telegram_id: String,
     pub status: SubscriptionStatus,
     #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]
     pub created_at: DateTime<Utc>,
-    pub latest_url: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RssEntry {
     pub title: String,
     #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]
@@ -49,10 +53,12 @@ pub struct RssEntry {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug)]
-pub struct Read {
-    pub id: String,
-    pub user_id: String,
-    pub channel_id: String,
-    pub seen: bool,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Notification {
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
+    pub id: Option<ObjectId>,
+    pub telegram_id: String,
+    pub channel_url: String,
+    pub entries: Vec<RssEntry>,
+    pub sent: bool,
 }

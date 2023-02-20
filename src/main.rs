@@ -1,5 +1,5 @@
 use log::{info, LevelFilter};
-use rssling_bot::db::{types::User, DB};
+use rssling_bot::{db::DB, types::User};
 use rssling_bot::rss;
 use simple_logger::SimpleLogger;
 use std::error::Error;
@@ -49,8 +49,7 @@ async fn message_handler(bot: Bot, msg: Message, me: Me) -> HandlerResult {
                 info!("Link of sub: {}", &link);
 
                 subscribe_to_rss(&msg, &link).await?;
-
-                bot.send_message(msg.chat.id, format!("Success")).await?;
+                bot.send_message(msg.chat.id, format!("Successfully subscribed")).await?;
             }
 
             Err(_) => {
@@ -80,12 +79,14 @@ async fn start(msg: &Message) -> HandlerResult {
 }
 
 async fn subscribe_to_rss(msg: &Message, link: &str) -> HandlerResult {
-    let url = Url::parse(link)?;
+    let telegram_id = msg.from().unwrap().id.0.to_string();
 
+    let url = Url::parse(link)?;
     let channel = rss::fetch_channel(url.to_string()).await?;
     let db_client = DB::init().await.unwrap();
 
     db_client.create_or_update_channel(&channel).await?;
+    db_client.subscribe_to_channel(&channel, &telegram_id).await?;
 
     Ok(())
 }
