@@ -1,6 +1,16 @@
+use std::sync::Arc;
+
 use super::{Channel, Notification, RssEntry, Subscription, SubscriptionStatus};
 
 impl Channel {
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+
     pub fn new_entries(&self) -> Vec<RssEntry> {
         self.entries
             .clone()
@@ -20,13 +30,13 @@ impl Channel {
         let mut entries = self.entries.clone();
         entries.sort_by(|a, b| b.pub_date.cmp(&a.pub_date));
 
-        let entries = entries.into_iter().take(5).collect();
+        let entries: Vec<RssEntry> = entries.into_iter().take(5).collect();
         Notification {
             id: None,
             telegram_id: subscription.telegram_id.clone(),
             channel_name: self.title.clone(),
             channel_url: self.url.clone(),
-            entries,
+            entries: Arc::new(entries),
             sent: false,
         }
     }
@@ -34,15 +44,15 @@ impl Channel {
     pub fn notifications(
         &self,
         subscriptions: Vec<&Subscription>,
-        entries: Vec<RssEntry>,
+        entries: Arc<Vec<RssEntry>>,
     ) -> Vec<Notification> {
         subscriptions
             .iter()
             .map(|sub| Notification {
                 id: None,
-                telegram_id: sub.telegram_id.clone(),
-                channel_url: self.url.clone(),
-                channel_name: self.title.clone(),
+                telegram_id: sub.telegram_id().into(),
+                channel_url: self.url().into(),
+                channel_name: self.title().into(),
                 entries: entries.clone(),
                 sent: false,
             })

@@ -10,4 +10,8 @@ impl Subscription {
             created_at: Utc::now(),
         }
     }
+
+    pub fn telegram_id(&self) -> &str {
+        &self.telegram_id
+    }
 }

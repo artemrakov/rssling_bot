@@ -1,3 +1,6 @@
+use std::rc::Rc;
+use std::sync::Arc;
+
 use bson::oid::ObjectId;
 use chrono::DateTime;
 use chrono::Utc;
@@ -60,6 +63,6 @@ pub struct Notification {
     pub telegram_id: String,
     pub channel_name: String,
     pub channel_url: String,
-    pub entries: Vec<RssEntry>,
+    pub entries: Arc<Vec<RssEntry>>,
     pub sent: bool,
 }

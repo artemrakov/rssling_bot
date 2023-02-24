@@ -6,14 +6,13 @@ use mongodb::{
     Collection,
 };
 
-const ID: &str = "_id";
+// const ID: &str = "_id";
 const USERS: &str = "users";
 const TELEGRAM_ID: &str = "telegram_id";
 
 impl DB {
     fn users(&self) -> Collection<Document> {
         let db = self.client.database(DB_NAME);
-
         db.collection::<Document>(USERS)
     }
 

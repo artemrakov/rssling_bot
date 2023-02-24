@@ -1,3 +1,5 @@
+use std::{rc::Rc, sync::Arc};
+
 use super::{
     error::Error::{self, MongoQueryError},
     DB,
@@ -6,7 +8,7 @@ use crate::{
     db::DB_NAME,
     types::{Channel, Notification, RssEntry, Subscription, SubscriptionStatus},
 };
-use chrono::Utc;
+use futures::TryStreamExt;
 use log::info;
 use mongodb::{
     bson::{doc, from_document, to_document, Document},
@@ -20,13 +22,23 @@ const TITLE: &str = "title";
 const URL: &str = "url";
 const UPDATED_AT: &str = "updated_at";
 const SUBS: &str = "subs";
-const ENTRIES: &str = "entries";
 
 impl DB {
     fn channels(&self) -> Collection<Document> {
         let db = self.client.database(DB_NAME);
-
         db.collection::<Document>(CHANNELS)
+    }
+
+    pub async fn all_channels(&self) -> Result<Vec<Channel>, Error> {
+        let mut cursor = self.channels().find(None, None).await?;
+        let mut channels = Vec::new();
+
+        while let Some(doc) = cursor.try_next().await? {
+            let channel = from_document(doc).unwrap();
+            channels.push(channel);
+        }
+
+        Ok(channels)
     }
 
     pub async fn find_channel(&self, query: Document) -> Result<Option<Channel>, Error> {
@@ -77,7 +89,7 @@ impl DB {
     }
 
     pub async fn update_channel(&self, channel: &Channel) -> Result<(), Error> {
-        let new_entries = channel.new_entries();
+        let new_entries = Arc::new(channel.new_entries());
 
         info!(
             "New entries to channel id: #{:?}. Entries: #{:?}",

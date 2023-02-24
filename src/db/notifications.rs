@@ -8,11 +8,11 @@ use mongodb::{
 
 const NOTIFICATIONS: &str = "notifications";
 
-const ID: &str = "_id";
-const TELEGRAM_ID: &str = "telegram_id";
-const CHANNEL_URL: &str = "channel_url";
-const ENTRIES: &str = "entries";
-const SENT: &str = "sent";
+// const ID: &str = "_id";
+// const TELEGRAM_ID: &str = "telegram_id";
+// const CHANNEL_URL: &str = "channel_url";
+// const ENTRIES: &str = "entries";
+// const SENT: &str = "sent";
 
 impl DB {
     fn notifications(&self) -> Collection<Document> {

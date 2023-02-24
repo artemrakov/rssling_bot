@@ -45,14 +45,8 @@ async fn main() {
 async fn message_handler(bot: Bot, msg: Message, me: Me) -> HandlerResult {
     if let Some(text) = msg.text() {
         match BotCommands::parse(text, me.username()) {
-            Ok(Command::Start) => start(&msg).await?,
-            Ok(Command::Sub(link)) => {
-                info!("Link of sub: {}", &link);
-
-                let message = subscribe_to_rss(&msg, &link).await?;
-                bot.send_message(msg.chat.id, message).await?;
-            }
-
+            Ok(Command::Start) => start(&msg, &bot).await?,
+            Ok(Command::Sub(link)) => subscribe_to_rss(&msg, &link, &bot).await?,
             Err(_) => {
                 bot.send_message(msg.chat.id, format!("Unknown command"))
                     .await?;
@@ -63,7 +57,7 @@ async fn message_handler(bot: Bot, msg: Message, me: Me) -> HandlerResult {
     Ok(())
 }
 
-async fn start(msg: &Message) -> HandlerResult {
+async fn start(msg: &Message, bot: &Bot) -> HandlerResult {
     let db_client = DB::init().await.unwrap();
     let telegram_user = msg.from().unwrap();
 
@@ -76,13 +70,11 @@ async fn start(msg: &Message) -> HandlerResult {
 
     db_client.create_user_if_not_exist(&user).await?;
 
+    bot.send_message(msg.chat.id, "Hello!").await?;
     Ok(())
 }
 
-async fn subscribe_to_rss(
-    msg: &Message,
-    link: &str,
-) -> Result<String, Box<dyn Error + Send + Sync>> {
+async fn subscribe_to_rss(msg: &Message, link: &str, bot: &Bot) -> HandlerResult {
     let telegram_id = msg.from().unwrap().id.0.to_string();
 
     let url = Url::parse(link)?;
@@ -96,13 +88,19 @@ async fn subscribe_to_rss(
             "subs.telegram_id": &telegram_id,
         })
         .await?;
+
     if let Some(_) = found_channel {
-        return Ok("You have already subscribed to this feed".to_string());
+        bot.send_message(msg.chat.id, "You have already subscribed to this feed")
+            .await?;
+
+        return Ok(());
     }
 
     db_client
         .subscribe_to_channel(&channel, &telegram_id)
         .await?;
 
-    Ok(format!("Successfully subscribed"))
+    bot.send_message(msg.chat.id, "Succefully subscribed to the feed")
+        .await?;
+    Ok(())
 }
