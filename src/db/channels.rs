@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use super::{
     error::Error::{self, MongoQueryError},
@@ -6,7 +6,7 @@ use super::{
 };
 use crate::{
     db::DB_NAME,
-    types::{Channel, Notification, RssEntry, Subscription, SubscriptionStatus},
+    types::{Channel, Subscription},
 };
 use futures::TryStreamExt;
 use log::info;
@@ -20,7 +20,7 @@ const CHANNELS: &str = "channels";
 const ID: &str = "_id";
 const TITLE: &str = "title";
 const URL: &str = "url";
-const UPDATED_AT: &str = "updated_at";
+// const UPDATED_AT: &str = "updated_at";
 const SUBS: &str = "subs";
 
 impl DB {
@@ -111,7 +111,7 @@ impl DB {
                 },
                 doc! {
                     "$set": { TITLE: &channel.title },
-                    "$currentDate": { UPDATED_AT: true },
+                    // "$currentDate": { UPDATED_AT: true },
                 },
                 None,
             )

@@ -2,7 +2,7 @@ use super::{error::Error, error::Error::MongoQueryError, DB};
 use crate::{db::DB_NAME, types::Notification};
 use log::info;
 use mongodb::{
-    bson::{doc, from_document, to_document, Document},
+    bson::{to_document, Document},
     Collection,
 };
 
