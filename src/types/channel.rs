@@ -11,9 +11,14 @@ impl Channel {
         &self.url
     }
 
-    pub fn new_entries(&self) -> Vec<RssEntry> {
-        self.entries
-            .clone()
+    pub fn update_entries(&mut self, entries: &Arc<Vec<RssEntry>>) {
+        self.entries = Arc::clone(entries);
+    }
+
+    pub fn released_entries(&self) -> Vec<RssEntry> {
+        let cloned_entires = (*self.entries).clone();
+
+        cloned_entires
             .into_iter()
             .filter(|entry| entry.pub_date > self.updated_at)
             .collect()
@@ -27,10 +32,10 @@ impl Channel {
     }
 
     pub fn latest_notification(&self, subscription: &Subscription) -> Notification {
-        let mut entries = self.entries.clone();
-        entries.sort_by(|a, b| b.pub_date.cmp(&a.pub_date));
+        let mut cloned_entries = (*self.entries).clone();
+        cloned_entries.sort_by(|a, b| b.pub_date.cmp(&a.pub_date));
 
-        let entries: Vec<RssEntry> = entries.into_iter().take(5).collect();
+        let entries: Vec<RssEntry> = cloned_entries.into_iter().take(5).collect();
         Notification {
             id: None,
             telegram_id: subscription.telegram_id.clone(),
@@ -44,7 +49,7 @@ impl Channel {
     pub fn notifications(
         &self,
         subscriptions: Vec<&Subscription>,
-        entries: Arc<Vec<RssEntry>>,
+        entries: &Arc<Vec<RssEntry>>,
     ) -> Vec<Notification> {
         subscriptions
             .iter()
@@ -53,7 +58,7 @@ impl Channel {
                 telegram_id: sub.telegram_id().into(),
                 channel_url: self.url().into(),
                 channel_name: self.title().into(),
-                entries: entries.clone(),
+                entries: Arc::clone(entries),
                 sent: false,
             })
             .collect()

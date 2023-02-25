@@ -27,7 +27,7 @@ pub struct Channel {
     #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]
     pub updated_at: DateTime<Utc>,
     #[serde(skip_serializing, skip_deserializing)]
-    pub entries: Vec<RssEntry>,
+    pub entries: Arc<Vec<RssEntry>>,
     pub subs: Vec<Subscription>,
 }
 

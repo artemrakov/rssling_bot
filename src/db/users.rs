@@ -17,7 +17,7 @@ impl DB {
     }
 
     pub async fn create_user_if_not_exist(&self, user: &User) -> Result<(), Error> {
-        if let Some(_) = self.find_user(&user).await? {
+        if let Some(_) = self.find_user(user).await? {
             return Ok(());
         }
         let doc = to_document(&user).unwrap();
@@ -44,7 +44,7 @@ impl DB {
             )
             .await?;
 
-        if let None = user {
+        if user.is_none() {
             return Ok(None);
         }
 

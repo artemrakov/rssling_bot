@@ -25,6 +25,8 @@ impl DB {
         &self,
         notifications: &Vec<Notification>,
     ) -> Result<(), Error> {
+        info!("Creating notifications: #{:?}", notifications);
+
         let docs: Vec<Document> = notifications
             .iter()
             .map(|notification| to_document(notification).unwrap())

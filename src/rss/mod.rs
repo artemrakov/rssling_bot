@@ -2,7 +2,7 @@ use super::types::{Channel, RssEntry};
 use atom_syndication::Link;
 use chrono::{DateTime, Utc};
 use log::info;
-use std::error::Error;
+use std::{error::Error, sync::Arc};
 
 pub async fn fetch_channel(url: String) -> Result<Channel, Box<dyn Error + Send + Sync>> {
     let content = reqwest::get(&url).await?.text().await?;
@@ -47,7 +47,7 @@ fn parse_atom(
         title: atom.title.value,
         url,
         updated_at: Utc::now(),
-        entries,
+        entries: Arc::new(entries),
         subs: vec![],
     };
 
@@ -81,7 +81,7 @@ fn parse_rss(
         title: rss_channel.title,
         url,
         updated_at: Utc::now(),
-        entries,
+        entries: Arc::new(entries),
         subs: vec![],
     };
 

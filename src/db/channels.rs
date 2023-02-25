@@ -20,7 +20,7 @@ const CHANNELS: &str = "channels";
 const ID: &str = "_id";
 const TITLE: &str = "title";
 const URL: &str = "url";
-// const UPDATED_AT: &str = "updated_at";
+const UPDATED_AT: &str = "updated_at";
 const SUBS: &str = "subs";
 
 impl DB {
@@ -44,7 +44,7 @@ impl DB {
     pub async fn find_channel(&self, query: Document) -> Result<Option<Channel>, Error> {
         let channel = self.channels().find_one(query, None).await?;
 
-        if let None = channel {
+        if channel.is_none() {
             return Ok(None);
         }
 
@@ -66,7 +66,7 @@ impl DB {
         self.channels()
             .update_one(
                 doc! {
-                    URL: channel.url.clone()
+                    URL: channel.url()
                 },
                 doc! {
                     "$push": { SUBS: doc_sub }
@@ -89,17 +89,18 @@ impl DB {
     }
 
     pub async fn update_channel(&self, channel: &Channel) -> Result<(), Error> {
-        let new_entries = Arc::new(channel.new_entries());
+        info!("Updating channel: #{:?}", channel);
+        let released_entries = Arc::new(channel.released_entries());
 
         info!(
             "New entries to channel id: #{:?}. Entries: #{:?}",
-            channel.id, new_entries
+            channel.url(),
+            released_entries
         );
 
-        if new_entries.len() > 0 {
-            let active_subs = channel.active_subscriptions();
-            let notifications = channel.notifications(active_subs, new_entries);
-
+        let active_subs = channel.active_subscriptions();
+        if released_entries.len() > 0 && active_subs.len() > 0 {
+            let notifications = channel.notifications(active_subs, &released_entries);
             self.create_notifications(&notifications).await?;
         }
 
@@ -107,18 +108,18 @@ impl DB {
             .channels()
             .update_one(
                 doc! {
-                    ID: channel.id.clone().unwrap()
+                    ID: channel.id.unwrap(),
                 },
                 doc! {
                     "$set": { TITLE: &channel.title },
-                    // "$currentDate": { UPDATED_AT: true },
+                    "$currentDate": { UPDATED_AT: true },
                 },
                 None,
             )
             .await
             .map_err(MongoQueryError)?;
 
-        info!("Update Channel #{:?}", updated_channel);
+        info!("Updated Channel #{:?}", updated_channel);
 
         Ok(())
     }
@@ -138,12 +139,14 @@ impl DB {
     }
 
     pub async fn create_or_update_channel(&self, channel: &Channel) -> Result<(), Error> {
-        if let Some(found_channel) = self.find_channel(doc! { URL: &channel.url }).await? {
+        if let Some(mut found_channel) = self.find_channel(doc! { URL: &channel.url }).await? {
+            found_channel.update_entries(&channel.entries);
+
             self.update_channel(&found_channel).await?;
             return Ok(());
         }
 
-        self.create_channel(&channel).await?;
+        self.create_channel(channel).await?;
         Ok(())
     }
 }

@@ -48,7 +48,7 @@ async fn message_handler(bot: Bot, msg: Message, me: Me) -> HandlerResult {
             Ok(Command::Start) => start(&msg, &bot).await?,
             Ok(Command::Sub(link)) => subscribe_to_rss(&msg, &link, &bot).await?,
             Err(_) => {
-                bot.send_message(msg.chat.id, format!("Unknown command"))
+                bot.send_message(msg.chat.id, "Unknown command".to_string())
                     .await?;
             }
         }
@@ -89,7 +89,7 @@ async fn subscribe_to_rss(msg: &Message, link: &str, bot: &Bot) -> HandlerResult
         })
         .await?;
 
-    if let Some(_) = found_channel {
+    if found_channel.is_some() {
         bot.send_message(msg.chat.id, "You have already subscribed to this feed")
             .await?;
 
