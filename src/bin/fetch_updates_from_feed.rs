@@ -20,10 +20,7 @@ async fn main() {
 
     let bodies = stream::iter(channels)
         .map(|channel| {
-            let url = channel.url.clone();
-            let db_client = db_client.clone();
-
-            tokio::spawn(async move {
+            let url = channel.url.clone(); let db_client = db_client.clone(); tokio::spawn(async move {
                 let updated_channel = fetch_channel(url).await.expect("Failed to fetch channel");
                 db_client
                     .create_or_update_channel(&updated_channel)

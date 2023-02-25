@@ -1,8 +1,9 @@
 use super::{error::Error, error::Error::MongoQueryError, DB};
 use crate::{db::DB_NAME, types::Notification};
+use futures::TryStreamExt;
 use log::info;
 use mongodb::{
-    bson::{to_document, Document},
+    bson::{to_document, doc, from_document, Document},
     Collection,
 };
 
@@ -19,6 +20,38 @@ impl DB {
         let db = self.client.database(DB_NAME);
 
         db.collection::<Document>(NOTIFICATIONS)
+    }
+
+    pub async fn all_notifications(&self) -> Result<Vec<Notification>, Error> {
+        let mut cursor = self.notifications().find(None, None).await?;
+        let mut notifications = Vec::new();
+
+        while let Some(doc) = cursor.try_next().await? {
+            let notification = from_document(doc).unwrap();
+            notifications.push(notification);
+        }
+
+        Ok(notifications)
+    }
+
+    pub async fn update_notification(&self, id: &str) -> Result<(), Error> {
+        let updated_notification = self
+            .notifications()
+            .update_one(
+                doc! {
+                    "ID": id,
+                },
+                doc! {
+                    "$set": { "sent": true },
+                },
+                None,
+            )
+            .await
+            .map_err(MongoQueryError)?;
+
+        info!("Updated updated_notification #{:?}", updated_notification);
+
+        Ok(())
     }
 
     pub async fn create_notifications(

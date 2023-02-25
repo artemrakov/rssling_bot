@@ -38,7 +38,7 @@ impl Channel {
         let entries: Vec<RssEntry> = cloned_entries.into_iter().take(5).collect();
         Notification {
             id: None,
-            telegram_id: subscription.telegram_id.clone(),
+            telegram_id: subscription.telegram_id().into(),
             channel_name: self.title.clone(),
             channel_url: self.url.clone(),
             entries: Arc::new(entries),
