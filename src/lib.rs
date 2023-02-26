@@ -34,6 +34,7 @@ pub async fn start_bot() -> Result<Bot, Box<dyn Error + Send + Sync>> {
     info!("Starting the bot");
     let bot = Bot::from_env();
 
+    info!("Connecting to the database");
     DB::init().await.unwrap();
 
     Ok(bot)

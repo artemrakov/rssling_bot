@@ -1,26 +1,33 @@
-use lambda_http::{
-    aws_lambda_events::serde_json, run, service_fn, Body, Error, Request, Response,
-};
+use lambda_runtime::{run, service_fn, Error, LambdaEvent};
+use log::info;
 use rssling_bot::{message_handler, start_bot};
+use serde::{Deserialize, Serialize};
 use teloxide::requests::Requester;
-use tracing::info;
 
-async fn function_handler(request: Request) -> Result<Response<Body>, Error> {
-    info!("Request: {:?}", request);
+#[derive(Debug, Deserialize, Serialize)]
+struct Request {
+    command: String,
+}
+
+#[derive(Serialize)]
+struct Response {
+    msg: String,
+}
+
+async fn function_handler(event: LambdaEvent<Request>) -> Result<Response, Error> {
+    info!("Received request: {:?}", event);
 
     let bot = start_bot().await?;
     let me = bot.get_me().await?;
 
-    let body = request.body();
-    let message = serde_json::from_slice(body.as_ref())?;
+    let body = event;
+    // let message = serde_json::from_slice(body.as_ref())?;
 
-    message_handler(bot, message, me).await?;
+    // message_handler(bot, message, me).await?;
+    let resp = Response {
+        msg: format!("Suceess executed."),
+    };
 
-    let resp = Response::builder()
-        .status(200)
-        .header("content-type", "text/html")
-        .body("Success".into())
-        .map_err(Box::new)?;
     Ok(resp)
 }
 
@@ -34,3 +41,4 @@ async fn main() -> Result<(), Error> {
 
     run(service_fn(function_handler)).await
 }
+
