@@ -28,4 +28,5 @@ lambda_http = { version = "0.7", default-features = false, features = ["apigw_ht
 lambda_runtime = "0.7"
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }
+native-tls = { version = "0.2.6", features = ["vendored"] }
 
