@@ -1,3 +1,5 @@
+use std::env;
+
 use self::error::Error;
 use log::info;
 use mongodb::{bson::doc, options::ClientOptions, Client};
@@ -16,7 +18,7 @@ pub struct DB {
 
 impl DB {
     pub async fn init() -> Result<Self, Error> {
-        let mut client_options = ClientOptions::parse("mongodb://127.0.0.1:27017").await?;
+        let mut client_options = ClientOptions::parse(env::var("MONGO_URI").unwrap()).await?;
         client_options.app_name = Some(DB_NAME.to_string());
         let client = Client::with_options(client_options)?;
         client
