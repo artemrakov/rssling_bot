@@ -9,7 +9,7 @@ use crate::{
     types::{Channel, Subscription},
 };
 use futures::TryStreamExt;
-use log::info;
+use tracing::info;
 use mongodb::{
     bson::{doc, from_document, to_document, Document},
     Collection,

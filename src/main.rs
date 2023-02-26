@@ -1,29 +1,25 @@
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
-use log::info;
+use tracing::info;
 use rssling_bot::{message_handler, start_bot};
-use serde::{Deserialize, Serialize};
-use teloxide::requests::Requester;
-
-#[derive(Debug, Deserialize, Serialize)]
-struct Request {
-    command: String,
-}
+use serde::Serialize;
+use teloxide::types::{Update, UpdateKind};
 
 #[derive(Serialize)]
 struct Response {
     msg: String,
 }
 
-async fn function_handler(event: LambdaEvent<Request>) -> Result<Response, Error> {
+async fn function_handler(event: LambdaEvent<Update>) -> Result<Response, Error> {
     info!("Received request: {:?}", event);
 
     let bot = start_bot().await?;
-    let me = bot.get_me().await?;
+    let update: Update = event.payload;
 
-    let body = event;
-    // let message = serde_json::from_slice(body.as_ref())?;
+    match update.kind {
+        UpdateKind::Message(message) => message_handler(bot, message).await?,
+        _ => panic!("Expected `Message`"),
+    }
 
-    // message_handler(bot, message, me).await?;
     let resp = Response {
         msg: format!("Suceess executed."),
     };
@@ -41,4 +37,3 @@ async fn main() -> Result<(), Error> {
 
     run(service_fn(function_handler)).await
 }
-

@@ -1,7 +1,7 @@
 use super::types::{Channel, RssEntry};
 use atom_syndication::Link;
 use chrono::{DateTime, Utc};
-use log::info;
+use tracing::info;
 use std::{error::Error, sync::Arc};
 
 pub async fn fetch_channel(url: String) -> Result<Channel, Box<dyn Error + Send + Sync>> {

@@ -1,18 +1,18 @@
-use log::{info, LevelFilter};
+use tracing::info;
 use mongodb::bson::doc;
-use simple_logger::SimpleLogger;
-use types::User;
 use std::error::Error;
 use teloxide::{prelude::*, types::Me, utils::command::BotCommands};
+use types::User;
 use url::Url;
 
 use crate::db::DB;
 
 pub mod db;
-pub mod types;
 pub mod rss;
+pub mod types;
 
 type HandlerResult = Result<(), Box<dyn Error + Send + Sync>>;
+const BOT_NAME: &str = "RsstlingBot";
 
 #[derive(BotCommands, Clone)]
 #[command(
@@ -26,11 +26,6 @@ enum Command {
 }
 
 pub async fn start_bot() -> Result<Bot, Box<dyn Error + Send + Sync>> {
-    SimpleLogger::new()
-        .with_level(LevelFilter::Info)
-        .init()
-        .expect("Failed to initialize logger");
-
     info!("Starting the bot");
     let bot = Bot::from_env();
 
@@ -40,9 +35,9 @@ pub async fn start_bot() -> Result<Bot, Box<dyn Error + Send + Sync>> {
     Ok(bot)
 }
 
-pub async fn message_handler(bot: Bot, msg: Message, me: Me) -> HandlerResult {
+pub async fn message_handler(bot: Bot, msg: Message) -> HandlerResult {
     if let Some(text) = msg.text() {
-        match BotCommands::parse(text, me.username()) {
+        match BotCommands::parse(text, BOT_NAME) {
             Ok(Command::Start) => start(&msg, &bot).await?,
             Ok(Command::Sub(link)) => subscribe_to_rss(&msg, &link, &bot).await?,
             Err(_) => {

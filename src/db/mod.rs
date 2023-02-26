@@ -1,13 +1,17 @@
 use std::env;
 
 use self::error::Error;
-use log::info;
-use mongodb::{bson::doc, options::ClientOptions, Client};
+use bson::doc;
+use tracing::info;
+use mongodb::{
+    options::{ClientOptions, ResolverConfig},
+    Client,
+};
 
-pub mod error;
-pub mod users;
 pub mod channels;
+pub mod error;
 pub mod notifications;
+pub mod users;
 
 const DB_NAME: &str = "rssling_bot";
 
@@ -18,15 +22,14 @@ pub struct DB {
 
 impl DB {
     pub async fn init() -> Result<Self, Error> {
-        let mut client_options = ClientOptions::parse(env::var("MONGO_URI").unwrap()).await?;
-        client_options.app_name = Some(DB_NAME.to_string());
+        let client_uri =
+            env::var("MONGO_URI").expect("You must set the MONGODB_URI environment var!");
+        let client_options =
+            ClientOptions::parse_with_resolver_config(&client_uri, ResolverConfig::cloudflare())
+                .await?;
         let client = Client::with_options(client_options)?;
-        client
-            .database("admin")
-            .run_command(doc! {"ping": 1}, None)
-            .await?;
-        info!("Connected successfully.");
 
+        info!("Connected successfully.");
         Ok(Self { client })
     }
 }

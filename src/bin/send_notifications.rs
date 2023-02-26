@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use futures::{stream, StreamExt};
 use log::{error, info, LevelFilter};
-use rssling_bot::{db::DB, rss::fetch_channel, types::RssEntry};
+use rssling_bot::{db::DB, types::RssEntry};
 use simple_logger::SimpleLogger;
 use teloxide::prelude::*;
 

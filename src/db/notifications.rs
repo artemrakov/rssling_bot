@@ -1,7 +1,7 @@
 use super::{error::Error, error::Error::MongoQueryError, DB};
 use crate::{db::DB_NAME, types::Notification};
 use futures::TryStreamExt;
-use log::info;
+use tracing::info;
 use mongodb::{
     bson::{to_document, doc, from_document, Document},
     Collection,
