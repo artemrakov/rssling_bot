@@ -1,12 +1,17 @@
-use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response, aws_lambda_events::serde_json};
-use rssling_bot::{start_bot, message_handler};
+use lambda_http::{
+    aws_lambda_events::serde_json, run, service_fn, Body, Error, Request, Response,
+};
+use rssling_bot::{message_handler, start_bot};
 use teloxide::requests::Requester;
+use tracing::info;
 
-async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
+async fn function_handler(request: Request) -> Result<Response<Body>, Error> {
+    info!("Request: {:?}", request);
+
     let bot = start_bot().await?;
     let me = bot.get_me().await?;
 
-    let body = event.body();
+    let body = request.body();
     let message = serde_json::from_slice(body.as_ref())?;
 
     message_handler(bot, message, me).await?;
