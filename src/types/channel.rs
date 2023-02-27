@@ -33,7 +33,7 @@ impl Channel {
 
     pub fn latest_notification(&self, subscription: &Subscription) -> Notification {
         let mut cloned_entries = (*self.entries).clone();
-        cloned_entries.sort_by(|a, b| b.pub_date.cmp(&a.pub_date));
+        cloned_entries.sort_unstable_by(|a, b| b.pub_date.cmp(&a.pub_date));
 
         let entries: Vec<RssEntry> = cloned_entries.into_iter().take(5).collect();
         Notification {

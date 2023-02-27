@@ -1,12 +1,11 @@
 use std::env;
 
 use self::error::Error;
-use bson::doc;
-use tracing::info;
 use mongodb::{
     options::{ClientOptions, ResolverConfig},
     Client,
 };
+use tracing::info;
 
 pub mod channels;
 pub mod error;

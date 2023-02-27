@@ -1,7 +1,7 @@
 use tracing::info;
 use mongodb::bson::doc;
 use std::error::Error;
-use teloxide::{prelude::*, types::Me, utils::command::BotCommands};
+use teloxide::{prelude::*, utils::command::BotCommands};
 use types::User;
 use url::Url;
 
