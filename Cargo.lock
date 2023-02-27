@@ -2097,7 +2097,7 @@ dependencies = [
 [[package]]
 name = "syndication"
 version = "0.6.0"
-source = "git+https://github.com/rust-syndication/syndication#bc75ebef2da4cc430e8676ce4d9b892f24f5cf52"
+source = "git+https://github.com/rust-syndication/syndication?rev=bc75ebe#bc75ebef2da4cc430e8676ce4d9b892f24f5cf52"
 dependencies = [
  "atom_syndication 0.11.0",
  "rss",
