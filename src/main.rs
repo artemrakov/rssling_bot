@@ -21,7 +21,7 @@ async fn function_handler(event: LambdaEvent<Update>) -> Result<Response, Error>
     }
 
     let resp = Response {
-        msg: format!("Suceess executed."),
+        msg: "Suceess executed.".to_string(),
     };
 
     Ok(resp)

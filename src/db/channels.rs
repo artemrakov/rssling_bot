@@ -99,7 +99,7 @@ impl DB {
         );
 
         let active_subs = channel.active_subscriptions();
-        if released_entries.len() > 0 && active_subs.len() > 0 {
+        if !released_entries.is_empty() && !active_subs.is_empty() {
             let notifications = channel.notifications(active_subs, &released_entries);
             self.create_notifications(&notifications).await?;
         }
