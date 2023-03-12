@@ -1,16 +1,15 @@
-use aws_lambda_events::{apigw::ApiGatewayProxyRequest, serde_json};
+use aws_lambda_events::encodings::Body;
+use aws_lambda_events::{
+    apigw::ApiGatewayProxyRequest, apigw::ApiGatewayProxyResponse, http::HeaderMap, serde_json,
+};
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 use rssling_bot::{message_handler, start_bot};
-use serde::Serialize;
 use teloxide::types::{Update, UpdateKind};
 use tracing::info;
 
-#[derive(Serialize)]
-struct Response {
-    msg: String,
-}
-
-async fn function_handler(event: LambdaEvent<ApiGatewayProxyRequest>) -> Result<Response, Error> {
+async fn function_handler(
+    event: LambdaEvent<ApiGatewayProxyRequest>,
+) -> Result<ApiGatewayProxyResponse, Error> {
     info!("Received request: {:?}", event);
     let body = event.payload.body.unwrap();
 
@@ -22,8 +21,12 @@ async fn function_handler(event: LambdaEvent<ApiGatewayProxyRequest>) -> Result<
         _ => panic!("Expected `Message`"),
     }
 
-    let resp = Response {
-        msg: "Suceess executed.".to_string(),
+    let resp = ApiGatewayProxyResponse {
+        status_code: 200,
+        body: Some(Body::Text("Ok".to_string())),
+        headers: HeaderMap::new(),
+        multi_value_headers: HeaderMap::new(),
+        is_base64_encoded: Some(false),
     };
 
     Ok(resp)
