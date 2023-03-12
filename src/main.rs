@@ -1,19 +1,21 @@
+use aws_lambda_events::{apigw::ApiGatewayProxyRequest, serde_json};
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
-use tracing::info;
 use rssling_bot::{message_handler, start_bot};
 use serde::Serialize;
 use teloxide::types::{Update, UpdateKind};
+use tracing::info;
 
 #[derive(Serialize)]
 struct Response {
     msg: String,
 }
 
-async fn function_handler(event: LambdaEvent<Update>) -> Result<Response, Error> {
+async fn function_handler(event: LambdaEvent<ApiGatewayProxyRequest>) -> Result<Response, Error> {
     info!("Received request: {:?}", event);
+    let body = event.payload.body.unwrap();
 
+    let update: Update = serde_json::from_str(&body).unwrap();
     let bot = start_bot().await?;
-    let update: Update = event.payload;
 
     match update.kind {
         UpdateKind::Message(message) => message_handler(bot, message).await?,

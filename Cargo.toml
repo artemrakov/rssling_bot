@@ -26,6 +26,7 @@ reqwest = { version = "0.11", features = ["json"] }
 tokio = { version =  "1.23", features = ["full", "rt-multi-thread", "macros"] }
 lambda_http = "0.7"
 lambda_runtime = "0.7"
+aws_lambda_events = { version = "^0.7", default-features = false, features = ["apigw"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }
 native-tls = { version = "0.2.6", features = ["vendored"] }

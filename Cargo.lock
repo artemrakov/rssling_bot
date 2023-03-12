@@ -1735,6 +1735,7 @@ name = "rssling_bot"
 version = "0.1.0"
 dependencies = [
  "atom_syndication 0.11.0",
+ "aws_lambda_events",
  "bson",
  "chrono",
  "futures",
