@@ -64,5 +64,9 @@ fn format_message(channel_name: &str, entries: Arc<Vec<RssEntry>>) -> String {
         .map(|entry| format!("<a href='{}'>{}</a>", entry.url, entry.title))
         .collect();
 
-    format!("<strong>{}</strong>\n{}", channel_name, markdown_urls.join("\n"))
+    format!(
+        "<strong>{}</strong>\n{}",
+        channel_name,
+        markdown_urls.join("\n")
+    )
 }

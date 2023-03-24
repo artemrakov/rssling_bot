@@ -1,25 +1,44 @@
 use aws_lambda_events::encodings::Body;
 use aws_lambda_events::{
-    apigw::ApiGatewayProxyRequest, apigw::ApiGatewayProxyResponse, http::HeaderMap, serde_json,
+    apigw::ApiGatewayProxyRequest, apigw::ApiGatewayProxyResponse, http::HeaderMap,
 };
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
-use rssling_bot::{message_handler, start_bot};
-use teloxide::types::{Update, UpdateKind};
+use rssling_bot::{fetch_updates_from_feed, process_bot_message};
 use tracing::info;
 
 async fn function_handler(
     event: LambdaEvent<ApiGatewayProxyRequest>,
 ) -> Result<ApiGatewayProxyResponse, Error> {
-    info!("Received request: {:?}", event);
-    let body = event.payload.body.unwrap();
+    info!("Received request: {:?}", &event);
+    let path = event.payload.path.as_ref().unwrap();
 
-    let update: Update = serde_json::from_str(&body).unwrap();
-    let bot = start_bot().await?;
-
-    match update.kind {
-        UpdateKind::Message(message) => message_handler(bot, message).await?,
-        _ => panic!("Expected `Message`"),
+    match path.as_str() {
+        "/default/rssling_bot" => handle_bot_message(&event).await,
+        "/fetch_updates_from_feed" => handle_fetch_updates_from_feed().await,
+        _ => panic!("Unknown path"),
     }
+}
+
+async fn handle_fetch_updates_from_feed() -> Result<ApiGatewayProxyResponse, Error> {
+    fetch_updates_from_feed().await?;
+
+    let resp = ApiGatewayProxyResponse {
+        status_code: 200,
+        body: Some(Body::Text("Ok".to_string())),
+        headers: HeaderMap::new(),
+        multi_value_headers: HeaderMap::new(),
+        is_base64_encoded: Some(false),
+    };
+
+    Ok(resp)
+}
+
+async fn handle_bot_message(
+    event: &LambdaEvent<ApiGatewayProxyRequest>,
+) -> Result<ApiGatewayProxyResponse, Error> {
+    let body = event.payload.body.clone().unwrap();
+
+    process_bot_message(body).await?;
 
     let resp = ApiGatewayProxyResponse {
         status_code: 200,
@@ -42,3 +61,13 @@ async fn main() -> Result<(), Error> {
 
     run(service_fn(function_handler)).await
 }
+
+// #[test]
+// fn test_my_lambda_handler() {
+//   let input = include_str!("apigw_proxy_request.json");
+//
+//   let request = lambda_http::request::from_str(input)
+//     .expect("failed to create request");
+//
+//   let response = my_lambda_handler(request).await.expect("failed to handle request");
+// }
