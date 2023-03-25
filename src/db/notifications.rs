@@ -1,5 +1,6 @@
 use super::{error::Error, error::Error::MongoQueryError, DB};
 use crate::{db::DB_NAME, types::Notification};
+use bson::oid::ObjectId;
 use futures::TryStreamExt;
 use mongodb::{
     bson::{doc, from_document, to_document, Document},
@@ -38,13 +39,13 @@ impl DB {
     }
 
     pub async fn update_notification(&self, id: &str) -> Result<(), Error> {
-        info!("Updating notification id #{:?}", id);
+        info!("Updating notification id #{:?}", &id);
 
         let updated_notification = self
             .notifications()
             .update_one(
                 doc! {
-                    ID: id,
+                    ID: ObjectId::parse_str(id).unwrap(),
                 },
                 doc! {
                     "$set": { "sent": true },
@@ -54,7 +55,7 @@ impl DB {
             .await
             .map_err(MongoQueryError)?;
 
-        info!("Updated updated_notification #{:?}", updated_notification);
+        info!("Updated updated_notification id: #{:?} with: #{:?}", id, updated_notification);
 
         Ok(())
     }
