@@ -1,5 +1,5 @@
 use crate::{db::DB, HandlerResult};
-use crate::fetch_channel;
+use crate::{fetch_channel, send_notifications};
 use crate::types::User;
 use mongodb::bson::doc;
 use std::error::Error;
@@ -89,5 +89,7 @@ async fn subscribe_to_rss(msg: &Message, link: &str, bot: &Bot) -> HandlerResult
 
     bot.send_message(msg.chat.id, "Succefully subscribed to the feed")
         .await?;
+
+    send_notifications().await?;
     Ok(())
 }
