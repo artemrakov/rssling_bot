@@ -1,11 +1,11 @@
 use super::{error::Error, error::Error::MongoQueryError, DB};
 use crate::{db::DB_NAME, types::Notification};
 use futures::TryStreamExt;
-use tracing::info;
 use mongodb::{
-    bson::{to_document, doc, from_document, Document},
+    bson::{doc, from_document, to_document, Document},
     Collection,
 };
+use tracing::info;
 
 const NOTIFICATIONS: &str = "notifications";
 
@@ -23,9 +23,12 @@ impl DB {
     }
 
     pub async fn all_notifications(&self) -> Result<Vec<Notification>, Error> {
-        let mut cursor = self.notifications().find(None, None).await?;
-        let mut notifications = Vec::new();
+        let mut cursor = self
+            .notifications()
+            .find(doc! { "sent": false }, None)
+            .await?;
 
+        let mut notifications = Vec::new();
         while let Some(doc) = cursor.try_next().await? {
             let notification = from_document(doc).unwrap();
             notifications.push(notification);

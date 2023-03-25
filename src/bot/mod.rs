@@ -90,6 +90,7 @@ async fn subscribe_to_rss(msg: &Message, link: &str, bot: &Bot) -> HandlerResult
     bot.send_message(msg.chat.id, "Succefully subscribed to the feed")
         .await?;
 
+    // only send notifications of the channel (currently we send all of them)
     send_notifications().await?;
     Ok(())
 }
