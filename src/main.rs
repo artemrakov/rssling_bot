@@ -3,7 +3,7 @@ use aws_lambda_events::{
     apigw::ApiGatewayProxyRequest, apigw::ApiGatewayProxyResponse, http::HeaderMap,
 };
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
-use rssling_bot::{fetch_updates_from_feed, process_bot_message};
+use rssling_bot::{fetch_updates_from_feed, process_bot_message, send_notifications};
 use tracing::info;
 
 async fn function_handler(
@@ -15,8 +15,23 @@ async fn function_handler(
     match path.as_str() {
         "/default/rssling_bot" => handle_bot_message(&event).await,
         "/fetch_updates_from_feed" => handle_fetch_updates_from_feed().await,
+        "/send_notifications" => handle_notifications().await,
         _ => panic!("Unknown path"),
     }
+}
+
+async fn handle_notifications() -> Result<ApiGatewayProxyResponse, Error> {
+    send_notifications().await?;
+
+    let resp = ApiGatewayProxyResponse {
+        status_code: 200,
+        body: Some(Body::Text("Ok".to_string())),
+        headers: HeaderMap::new(),
+        multi_value_headers: HeaderMap::new(),
+        is_base64_encoded: Some(false),
+    };
+
+    Ok(resp)
 }
 
 async fn handle_fetch_updates_from_feed() -> Result<ApiGatewayProxyResponse, Error> {
