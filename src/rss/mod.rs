@@ -1,7 +1,7 @@
 use super::types::{Channel, RssEntry};
 use atom_syndication::Link;
 use chrono::{DateTime, Utc};
-use tracing::info;
+use log::info;
 use std::{error::Error, sync::Arc};
 
 pub async fn fetch_channel(url: String) -> Result<Channel, Box<dyn Error + Send + Sync>> {
@@ -65,7 +65,7 @@ fn parse_rss(
         .iter()
         .map(|item| {
             let pub_date = item.pub_date.clone().unwrap_or(Utc::now().to_rfc2822());
-            let parsed_date = DateTime::parse_from_rfc2822(&pub_date).unwrap();
+            let parsed_date = DateTime::parse_from_rfc2822(&pub_date).unwrap_or(Utc::now().into());
 
             RssEntry {
                 title: item.title.clone().unwrap_or("".to_string()),
