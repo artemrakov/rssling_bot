@@ -74,6 +74,7 @@ pub async fn send_notifications() -> HandlerResult {
     let db_client = DB::init().await.unwrap();
 
     let notifications = db_client.all_notifications().await.unwrap();
+    info!("Notification to send #{:?}", &notifications);
 
     let bodies = stream::iter(notifications)
         .map(|notification| {
@@ -85,16 +86,18 @@ pub async fn send_notifications() -> HandlerResult {
             info!("Message: #{:?}", message);
 
             async move {
-                bot.send_message(telegram_id, message)
+                bot.send_message(telegram_id.clone(), message)
                     .disable_web_page_preview(true)
                     .parse_mode(teloxide::types::ParseMode::Html)
                     .await
                     .expect("Failed to send message");
+                info!("Message sent to {}", &telegram_id);
 
                 db_client
                     .update_notification(&id)
                     .await
                     .expect("Failed to update notification");
+                info!("Updated database notification to {}", &id);
 
                 Ok(id) as reqwest::Result<_>
             }

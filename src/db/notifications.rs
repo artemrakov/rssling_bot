@@ -38,6 +38,8 @@ impl DB {
     }
 
     pub async fn update_notification(&self, id: &str) -> Result<(), Error> {
+        info!("Updating notification id #{:?}", id);
+
         let updated_notification = self
             .notifications()
             .update_one(
