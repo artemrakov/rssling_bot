@@ -1,10 +1,13 @@
 use bot::{message_handler, start_bot};
 use futures::stream::{self, StreamExt};
-use types::RssEntry;
 use std::{error::Error, sync::Arc};
-use teloxide::{types::{Update, UpdateKind}, Bot};
-use tracing::{error, info};
 use teloxide::prelude::*;
+use teloxide::{
+    types::{Update, UpdateKind},
+    Bot,
+};
+use tracing::{error, info};
+use types::RssEntry;
 
 use crate::{db::DB, rss::fetch_channel};
 
@@ -23,9 +26,18 @@ pub async fn process_bot_message(body: String) -> HandlerResult {
     let bot = start_bot().await?;
 
     match update.kind {
-        UpdateKind::Message(message) => message_handler(bot, message).await?,
-        _ => panic!("Expected `Message`"),
-    }
+        UpdateKind::Message(message) => {
+            let chat_id = message.chat.id;
+            let result = message_handler(bot.clone(), message).await;
+
+            if let Err(e) = result {
+                error!("Error while processing message: {:?}", e);
+                bot.send_message(chat_id, "Error while processing message")
+                    .await?;
+            }
+        }
+        _ => panic!("Unexpected `Message`"),
+    };
 
     Ok(())
 }
