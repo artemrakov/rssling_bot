@@ -98,13 +98,15 @@ pub async fn send_notifications() -> HandlerResult {
             info!("Message: #{:?}", message);
 
             async move {
-                bot.send_message(telegram_id.clone(), message)
+                let result = bot.send_message(telegram_id.clone(), message)
                     .disable_web_page_preview(true)
                     .parse_mode(teloxide::types::ParseMode::Html)
-                    .await
-                    .expect("Failed to send message");
-                info!("Message sent to {}", &telegram_id);
+                    .await;
+                if let Err(e) = result {
+                    error!("Error while sending message: {:?}", e);
+                }
 
+                info!("Message sent to {}", &telegram_id);
                 db_client
                     .update_notification(&id)
                     .await
